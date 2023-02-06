@@ -14,50 +14,60 @@
 
     .counter-transition {
         color: #ccfc6e;
+        font-size: 20rem;
 
-        &.appear {
-            font-size: 2rem;
-        }
+        // &.appear {
+        //     font-size: 2rem;
+        // }
 
-        &.appear-active {
-            font-size: 2rem;
-            transition: font-size 500ms;
-        }
+        // &.appear-active {
+        //     font-size: 2rem;
+        //     transition: font-size 500ms;
+        // }
 
-        &.appear-done {
-            font-size: 15rem;
-        }
+        // &.appear-done {
+        //     font-size: 15rem;
+        // }
 
         &.active {
-            font-size: 2rem;
-            transition: font-size 500ms;
+            // font-size: 2rem;
+            // transition: font-size 500ms;
         }
 
         &.enter {
-            font-size: 2rem;
+            opacity: 0;
+            font-size: 5rem;
+
         }
 
         &.enter-active {
-            font-size: 2rem;
+            opacity: 1;
+            font-size: 20rem;
+
             transition: opacity 500ms;
+            transition: font-size 500ms;
+
         }
 
         &.enter-done {
-            font-size: 15rem;
+            // font-size: 15rem;
         }
 
         &.exit {
-            font-size: 15rem;
+            opacity: 1;
+            font-size: 20rem;
         }
 
         &.exit-active {
-            font-size: 15rem;
-            transition: font-size 1000ms;
+            opacity: 0;
+            transition: opacity 500ms;
+            transition: font-size 500ms;
+            font-size: 20rem;
         }
 
-        &.exit-done {
-            font-size: 15rem;
-        }
+        // &.exit-done {
+        //     font-size: 0rem;
+        // }
     }
 
 }

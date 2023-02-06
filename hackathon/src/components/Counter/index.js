@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CSSTransition } from 'react-transition-group';
+import { CSSTransition, SwitchTransition } from 'react-transition-group';
 import usePrevious from '../hooks/usePrevious';
 import './index.scss';
 
@@ -19,14 +19,17 @@ const Counter = ({count, maxCount}) => {
 
   return (
     <div className='counter-container'>
+      <SwitchTransition>
       <CSSTransition
         in={isEnter}
         timeout={1000}
         className="counter-transition"
         appear={true}
+        key={count}
       >
         <div className='counter'>{getCount()}</div>
       </CSSTransition>
+      </SwitchTransition>
     </div>
   )
 }
