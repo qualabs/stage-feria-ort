@@ -1,0 +1,9 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true,
+        "source.organizeImports": true
+    },
+    "eslint.validate": ["javascript"],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+}

@@ -1,0 +1,13 @@
+.App {
+  height: 100%;
+  position: relative;
+
+  button {
+    position: absolute;
+    z-index: 2;
+  }
+
+  .content {
+    height: 100%;
+  }
+}
