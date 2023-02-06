@@ -16,6 +16,7 @@ const VideoGrid = ({ videos }) => {
   const renderVideoTiles = () => {
     const width = resize()
     return videos.map(() => {
+      // eslint-disable-next-line react/jsx-key
       return <VideoTile width={width}/>
     });
   }
@@ -29,7 +30,6 @@ const VideoGrid = ({ videos }) => {
           if ((w + increment) > width) {
               w = 0;
               h = h + (increment * RATIO) + (MARGIN * 2);
-              console.log(h)
             }
           w = w + increment + (MARGIN * 2);
           i++;

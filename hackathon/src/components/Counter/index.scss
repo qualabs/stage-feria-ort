@@ -44,8 +44,8 @@
             opacity: 1;
             font-size: 20rem;
 
-            transition: opacity 500ms;
-            transition: font-size 500ms;
+            transition: opacity 100ms;
+            transition: font-size 100ms;
 
         }
 
@@ -60,8 +60,8 @@
 
         &.exit-active {
             opacity: 0;
-            transition: opacity 500ms;
-            transition: font-size 500ms;
+            transition: opacity 100ms;
+            transition: font-size 100ms;
             font-size: 20rem;
         }
 

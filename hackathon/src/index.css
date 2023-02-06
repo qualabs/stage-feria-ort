@@ -11,6 +11,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #2d1674;
+  background-image: url('./media/images/background.jpg');
 }
 
 body, #root {
