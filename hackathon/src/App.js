@@ -15,33 +15,59 @@ const ws = new WebSocket(SERVER_URL, 'janus-protocol');
 const session = new JanusSession(ws.send.bind(ws));
 const handle = new JanusPluginHandle(session);
 
-const start = () => {
-  console.log("Hola");
-  ws.addEventListener('message', ev => session.receive(JSON.parse(ev.data)));
-  ws.addEventListener('open', () => {
-    session.create()
-      .then(() => {
-        handle.attach('janus.plugin.videoroom').then(handle.sendMessage({request: 'listparticipants', room: ROOM_ID}))
-      })
-      // .then(handle.sendMessage({request: 'listparticipants', room: ROOM_ID}))
-      // .then(d => {
-      //   const participants = d.plugindata.data.participants
-      //   handle.sendMessage({
-      //     request: 'join',
-      //     room: ROOM_ID,
-      //     ptype: 'subscriber',
-      //     streams: participants.map(p => ({feed: p.id}))
-      //   }).then(d => {
-      //     console.log(d);
-      //   })
-      //   })
-      // .then(() => { console.info('Connected to Janus: '); })
-      // .catch(e => { console.error('Error connecting to Janus: ', e); });
-  });
-}
 
 function App() {
   const [videos, setVideos] = useState([])
+
+  const pc = new RTCPeerConnection({
+    iceServers: [
+      {
+        urls: "stun:stun.l.google.com:19302",
+      }
+    ],
+  });
+  // pc.onicecandidate = onIceCandidate;
+  pc.ontrack = (event) => {
+    if (event.track.kind === 'video') {
+      let video = document.createElement('video')
+      video.srcObject = event.streams[0]
+
+      document.getElementById('root').appendChild(video)
+    }
+    console.log(event);
+  };
+
+  const start = () => {
+    console.log("Hola");
+    ws.addEventListener('message', ev => session.receive(JSON.parse(ev.data)));
+    ws.addEventListener('open', () => {
+      session.create()
+        .then(() => handle.attach('janus.plugin.videoroom'))
+        .then(() => handle.sendMessage({request: 'listparticipants', room: ROOM_ID}))
+        .then(d => {
+          const participants = d.plugindata.data.participants
+          handle.sendMessage({
+            request: 'join',
+            room: ROOM_ID,
+            ptype: 'subscriber',
+            streams: participants.map(p => ({feed: p.id}))
+          }).then(d => {
+            console.log(d);
+            pc.setRemoteDescription(d.jsep)
+              .then(() =>{
+                pc.createAnswer().then(d => {
+                  pc.setLocalDescription(d)
+                  handle.sendMessage({
+                    request: 'start'
+                  })
+                })
+              })
+          })
+          })
+        .then(() => { console.info('Connected to Janus: '); })
+        .catch(e => { console.error('Error connecting to Janus: ', e); });
+    });
+  }
 
   useEffect(() => {
     start()
