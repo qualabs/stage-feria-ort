@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { Children, useEffect, useState } from 'react'
 import { MARGIN } from './constants'
 import './index.scss'
 import { getBestFit } from './utils'
 import VideoTile from './VideoTile'
 
-const VideoGrid = ({ videos }) => {
+const VideoGrid = ({ children }) => {
+  const childrenArray = Children.toArray(children);
   const containerRef = React.createRef()
   const [width, setWidth] = useState()
   const [height, setHeight] = useState()
@@ -15,12 +16,12 @@ const VideoGrid = ({ videos }) => {
   }, [containerRef, height, width])
 
   const renderVideoTiles = () => {
-    const videoWidth = getBestFit(width, height, videos.length, 4/3).width
-    return videos.map(() => {
-      // eslint-disable-next-line react/jsx-key
+    const videoWidth = getBestFit(width, height, childrenArray.length, 4/3).width
+    return Children.map(childrenArray, (video, index) => {
       return (
-        // eslint-disable-next-line react/jsx-key
-          <VideoTile width={videoWidth}/>
+          <VideoTile key={`video-tile-${index}`} width={videoWidth}>
+            {video}
+          </VideoTile>
       )
     });
   }
