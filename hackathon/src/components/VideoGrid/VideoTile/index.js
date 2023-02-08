@@ -1,11 +1,10 @@
 import React from 'react';
 import './index.scss';
 
-const VideoTile = ({ children, width }) => {
-
+const VideoTile = ({ data, width }) => {
   return (
     <div className='video-tile' style={{width: width}}>
-      {children}
+      <video id={data} playsInline autoPlay muted></video>
     </div>
   )}
 

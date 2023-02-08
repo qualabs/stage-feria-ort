@@ -1,99 +1,188 @@
 import { JanusPluginHandle, JanusSession } from 'minijanus';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './App.scss';
 import Counter from './components/Counter';
 import Fireworks from './components/Fireworks';
 import MuteButton from './components/MuteButton';
 import VideoGrid from './components/VideoGrid';
-import video from './media/videos/video.mp4';
 
-const MAX_COUNT = 3
+let MAX_COUNT;
 const ROOM_ID = 1234
 const SERVER_URL = 'wss://webrtc.qualabs.dev/ws'
 
+let pc;
 const ws = new WebSocket(SERVER_URL, 'janus-protocol');
 const session = new JanusSession(ws.send.bind(ws));
 const handle = new JanusPluginHandle(session);
+const handleSubs = new JanusPluginHandle(session);
 
 
 function App() {
-  const [videos, setVideos] = useState([])
+  const [participants, _setParticipants] = useState([])
+  const participantsRef = useRef(participants)
+  const setParticipants = data => {
+    participantsRef.current = data
+    _setParticipants(data)
+  }
 
-  const pc = new RTCPeerConnection({
-    iceServers: [
-      {
-        urls: "stun:stun.l.google.com:19302",
-      }
-    ],
-  });
-  // pc.onicecandidate = onIceCandidate;
-  pc.ontrack = (event) => {
-    if (event.track.kind === 'video') {
-      let video = document.createElement('video')
-      video.srcObject = event.streams[0]
+  const subscribe = (participantIds) => {
+    setParticipants([...participantsRef.current, ...participantIds])
+    if (participantIds.length === 0)
+      return
 
-      document.getElementById('root').appendChild(video)
+    if (!pc) {
+      handleSubs.attach("janus.plugin.videoroom")
+        .then(() => handleSubs.sendMessage({
+          request: 'join',
+          room: ROOM_ID,
+          ptype: 'subscriber',
+          use_msid: true,
+          streams: participantIds.map(p => ({feed: p}))
+        }))
     }
-    console.log(event);
-  };
+    else {
+      handleSubs.sendMessage({
+        request: 'subscribe',
+        streams: participantIds.map(p => ({feed: p}))
+      })
+    }
+  }
+
+  const unsubscribe = (participantId) => {
+    let ps = [...participantsRef.current]
+    ps = ps.filter(p => p !== participantId)
+    setParticipants(ps)
+
+    handleSubs.sendMessage({
+      request: 'unsubscribe',
+      streams: [{feed: participantId}]
+    })
+  }
 
   const start = () => {
-    console.log("Hola");
-    ws.addEventListener('message', ev => session.receive(JSON.parse(ev.data)));
-    ws.addEventListener('open', () => {
+    handle.on('event', (e) => publisherDataHandler(e));
+    handleSubs.on('event', (e) => signalingDataHandler(e));
+    session.on('trickle', ({candidate}) => {
+      if (candidate.candidate)
+        pc.addIceCandidate(candidate);
+    } )
+
+    ws.addEventListener("message", ev => session.receive(JSON.parse(ev.data)));
+    ws.addEventListener("open", () => {
       session.create()
-        .then(() => handle.attach('janus.plugin.videoroom'))
-        .then(() => handle.sendMessage({request: 'listparticipants', room: ROOM_ID}))
-        .then(d => {
-          const participants = d.plugindata.data.participants
-          handle.sendMessage({
-            request: 'join',
-            room: ROOM_ID,
-            ptype: 'subscriber',
-            streams: participants.map(p => ({feed: p.id}))
-          }).then(d => {
-            console.log(d);
-            pc.setRemoteDescription(d.jsep)
-              .then(() =>{
-                pc.createAnswer().then(d => {
-                  pc.setLocalDescription(d)
-                  handle.sendMessage({
-                    request: 'start'
-                  })
-                })
-              })
+        .then(() => handle.attach("janus.plugin.videoroom"))
+        .then(() => {
+          handle.sendMessage({request: 'list'}).then(d => {
+            d.plugindata.data.list.forEach(r => {
+              if (r.room === ROOM_ID) {
+                MAX_COUNT = r.max_publishers
+              }
+            });
           })
-          })
-        .then(() => { console.info('Connected to Janus: '); })
-        .catch(e => { console.error('Error connecting to Janus: ', e); });
+        })
+        .then(() => handle.sendMessage({request: 'join', room: ROOM_ID, ptype: 'publisher'}))
+        .then(() => { console.info("Connected to Janus: "); })
+        .catch(e => { console.error("Error connecting to Janus: ", e); });
     });
+
   }
+
+  const sendAnswer = () => {
+    console.log("Sending answer");
+    pc.createAnswer().then(setAndSendLocalDescription, (error) => {
+      console.error("Send answer failed: ", error);
+    });
+  };
+
+  const setAndSendLocalDescription = (sessionDescription) => {
+    pc.setLocalDescription(sessionDescription);
+    console.log("Local description set");
+    handleSubs.send("message", {
+      body: {
+        request: "start"
+      },
+      jsep: sessionDescription
+    })
+  };
+
+  const signalingDataHandler = (data) => {
+    const {plugindata, jsep} = data
+    if (plugindata.data.videoroom === "attached") {
+      createPeerConnection();
+      pc.setRemoteDescription(jsep);
+      sendAnswer();
+    }
+    if (plugindata.data.videoroom === "updated") {
+      if (jsep) {
+        pc.setRemoteDescription(jsep);
+        sendAnswer();
+      }
+    }
+  };
+
+  const publisherDataHandler = (data) => {
+    const {plugindata} = data
+
+    if (plugindata.data.publishers) {
+      console.log('New publishers: ', plugindata.data.publishers);
+      const newParticipants = plugindata.data.publishers.map(p => p.id)
+      subscribe(newParticipants)
+    }
+
+    if (plugindata.data.leaving) {
+      const leaving = plugindata.data.leaving
+      console.log('Publisher leaving: ', leaving);
+      unsubscribe(leaving)
+    }
+  };
+
+  const createPeerConnection = () => {
+    try {
+      pc = new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: "stun:stun.l.google.com:19302",
+          }
+        ],
+      });
+      pc.onicecandidate = onIceCandidate;
+      pc.ontrack = onTrack;
+      console.log("PeerConnection created");
+    } catch (error) {
+      console.error("PeerConnection failed: ", error);
+    }
+  };
+
+  const onIceCandidate = (event) => {
+    if (event.candidate) {
+      console.log("Sending ICE candidate");
+    }
+  }
+
+  const onTrack = (event) => {
+    const stream = event.streams[0]
+    const video = document.getElementById(stream.id)
+    video.srcObject = stream
+  };
 
   useEffect(() => {
     start()
-  }, [start])
+  }, [])
 
 
   const renderCounter = () => {
-    if(videos.length >= MAX_COUNT) {
+    if(participants.length >= MAX_COUNT) {
       return <Fireworks/>
     }
-    return (<Counter count={videos.length} maxCount={MAX_COUNT}/>)
-  }
-
-  const addVideo = (video) => {
-    setVideos([...videos, ...[video]])
+    return (<Counter count={participants.length} maxCount={MAX_COUNT}/>)
   }
 
   return (
     <div className='App'>
-      <button className='add-videos' onClick={() => addVideo(<video src={video} autoPlay />)}>+</button>
       <MuteButton/>
       {renderCounter()}
       <div className='content'>
-        <VideoGrid>
-          {videos}
-        </VideoGrid>
+        <VideoGrid participants={participants} />
       </div>
     </div>
   );

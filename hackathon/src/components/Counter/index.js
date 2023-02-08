@@ -13,6 +13,8 @@ const Counter = ({count, maxCount}) => {
   }, [count, previousCount, isEnter])
 
   const getCount = useCallback(() => {
+    if (!maxCount)
+      return 'Joining...'
     const remainder = maxCount - count
     return remainder < 0 ? 0 : remainder
   }, [count, maxCount])
