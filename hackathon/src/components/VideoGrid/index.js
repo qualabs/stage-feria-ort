@@ -1,4 +1,3 @@
-import base32 from 'hi-base32'
 import React, { useEffect, useState } from 'react'
 import totp from 'totp-generator'
 import VideoTile from './VideoTile'
@@ -6,7 +5,7 @@ import { MARGIN } from './constants'
 import './index.scss'
 import { getBestFit } from './utils'
 
-const secretKey = "A4BBMN3543BKJ4B2KFB4783RHYHCOINE"
+const secretKey = "JBSWY3DPEHPK3PXP"
 
 const VideoGrid = ({ participants }) => {
   const containerRef = React.createRef()
@@ -22,15 +21,10 @@ const VideoGrid = ({ participants }) => {
 
   useEffect(() => {
     const counterInterval = setInterval(() => {
-      if (counter > 0) {
-        setCounter(counter - 1)
-      } else {
-        var ttl = Math.round(Date.now() / 1000 % 30)
-        setCounter(30 - ttl)
-        const base32Key = base32.encode(secretKey)
-        const token = totp(base32Key, { period: 30 })
-        setCurrentTotp(token)
-      }
+      var ttl = Math.round(Date.now() / 1000 % 30)
+      setCounter(30 - ttl)
+      const token = totp(secretKey, { period: 30 })
+      setCurrentTotp(token)
     }, 1000)
 
     return () => {
