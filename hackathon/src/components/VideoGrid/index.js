@@ -6,6 +6,7 @@ import './index.scss'
 import { getBestFit } from './utils'
 
 const secretKey = "JBSWY3DPEHPK3PXP"
+const AWS_API_SELFIES = "https://xa4unlsrm8.execute-api.us-east-1.amazonaws.com/11oct"
 
 const VideoGrid = ({ participants }) => {
   const containerRef = React.createRef()
@@ -13,6 +14,8 @@ const VideoGrid = ({ participants }) => {
   const [height, setHeight] = useState()
   const [counter, setCounter] = useState(0)
   const [currentTotp, setCurrentTotp] = useState('')
+  const [selfies, setSelfies] = useState([]);
+  const tileWidth = getBestFit(width, height, participants.length + selfies.length + 1, 4/3).width
 
   useEffect(() => {
     setWidth(containerRef.current.offsetWidth - (MARGIN * 2))
@@ -32,17 +35,54 @@ const VideoGrid = ({ participants }) => {
     }
   }, [counter])
 
+  useEffect(() => {
+    const getSelfies = async () => {
+      const response = await fetch(`${AWS_API_SELFIES}/getselfies`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      const jsonResponse = await response.json()
+      setSelfies(jsonResponse.selfiesList);
+    }
+
+    getSelfies().catch(console.error);
+  }, [])
+
   const renderVideoTiles = () => {
-    const videoWidth = getBestFit(width, height, participants.length + 1, 4/3).width
     return participants.map((p, index) => {
       return (
-        <VideoTile key={`video-tile-${index}`} data={p} width={videoWidth}/>
+        <VideoTile key={`video-tile-${index}`} data={p} width={tileWidth}/>
       )
     })
   }
 
+  const renderSelfiesTiles = () => (
+    selfies.map((selfie, i) => {
+      return (
+        <div
+        key={i}
+        style={{backgroundSize: 'cover'}}>
+          <img
+          key={i}
+          src={`https://stand.qualabs.dev/${selfie}`}
+          className='video-tile'
+          style={{
+            alignItems: 'center',
+            background: 'black',
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            width: tileWidth
+          }}/>
+        </div>
+      )
+    })
+  )
+
   const renderTotpTile = () => {
-    const tileWidth = getBestFit(width, height, participants.length + 1, 4/3).width
     return (
       <div
       className='video-tile'
@@ -55,7 +95,7 @@ const VideoGrid = ({ participants }) => {
         justifyContent: 'center',
         width: tileWidth
       }}>
-        <div style={{fontSize: '30rem'}}>
+        <div style={{fontSize: '28rem'}}>
           {currentTotp}
         </div>
         <div style={{fontSize: '12rem'}}>
@@ -68,6 +108,7 @@ const VideoGrid = ({ participants }) => {
   return (
     <div ref={containerRef} className="video-grid-container">
       {renderVideoTiles()}
+      {renderSelfiesTiles()}
       {renderTotpTile()}
     </div>
   )
