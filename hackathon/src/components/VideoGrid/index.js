@@ -25,9 +25,10 @@ const VideoGrid = ({ participants }) => {
       if (counter > 0) {
         setCounter(counter - 1)
       } else {
-        setCounter(30)
+        var ttl = Math.round(Date.now() / 1000 % 30)
+        setCounter(30 - ttl)
         const base32Key = base32.encode(secretKey)
-        const token = totp(base32Key)
+        const token = totp(base32Key, { period: 30 })
         setCurrentTotp(token)
       }
     }, 1000)
@@ -38,7 +39,7 @@ const VideoGrid = ({ participants }) => {
   }, [counter])
 
   const renderVideoTiles = () => {
-    const videoWidth = getBestFit(width, height, participants.length, 4/3).width
+    const videoWidth = getBestFit(width, height, participants.length + 1, 4/3).width
     return participants.map((p, index) => {
       return (
         <VideoTile key={`video-tile-${index}`} data={p} width={videoWidth}/>
@@ -47,7 +48,7 @@ const VideoGrid = ({ participants }) => {
   }
 
   const renderTotpTile = () => {
-    const tileWidth = getBestFit(width, height, participants.length, 4/3).width
+    const tileWidth = getBestFit(width, height, participants.length + 1, 4/3).width
     return (
       <div
       className='video-tile'
@@ -56,11 +57,16 @@ const VideoGrid = ({ participants }) => {
         background: 'black',
         color: 'white',
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
-        fontSize: '62px',
         width: tileWidth
       }}>
-        {currentTotp}
+        <div style={{fontSize: '30rem'}}>
+          {currentTotp}
+        </div>
+        <div style={{fontSize: '12rem'}}>
+          {counter} segundos
+        </div>
       </div>
     )
   }
