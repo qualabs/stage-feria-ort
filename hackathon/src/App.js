@@ -1,12 +1,9 @@
 import { JanusPluginHandle, JanusSession } from 'minijanus';
 import React, { useEffect, useRef, useState } from 'react';
 import './App.scss';
-import Counter from './components/Counter';
-import Fireworks from './components/Fireworks';
 import MuteButton from './components/MuteButton';
 import VideoGrid from './components/VideoGrid';
 
-let MAX_COUNT;
 const ROOM_ID = 1234
 const SERVER_URL = 'wss://webrtc.qualabs.dev/ws'
 
@@ -71,15 +68,6 @@ function App() {
     ws.addEventListener("open", () => {
       session.create()
         .then(() => handle.attach("janus.plugin.videoroom"))
-        .then(() => {
-          handle.sendMessage({request: 'list'}).then(d => {
-            d.plugindata.data.list.forEach(r => {
-              if (r.room === ROOM_ID) {
-                MAX_COUNT = r.max_publishers
-              }
-            });
-          })
-        })
         .then(() => handle.sendMessage({request: 'join', room: ROOM_ID, ptype: 'publisher'}))
         .then(() => { console.info("Connected to Janus: "); })
         .catch(e => { console.error("Error connecting to Janus: ", e); });
@@ -170,17 +158,9 @@ function App() {
   }, [])
 
 
-  const renderCounter = () => {
-    if(participants.length >= MAX_COUNT) {
-      return <Fireworks/>
-    }
-    return (<Counter count={participants.length} maxCount={MAX_COUNT}/>)
-  }
-
   return (
     <div className='App'>
       <MuteButton/>
-      {renderCounter()}
       <div className='content'>
         <VideoGrid participants={participants} />
       </div>
