@@ -95,10 +95,10 @@ const VideoGrid = ({ participants }) => {
         justifyContent: 'center',
         width: tileWidth
       }}>
-        <div style={{fontSize: '28rem'}}>
+        <div style={{fontSize: '6rem'}}>
           {currentTotp}
         </div>
-        <div style={{fontSize: '12rem'}}>
+        <div style={{fontSize: '1.8rem'}}>
           {counter} segundos
         </div>
       </div>
