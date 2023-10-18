@@ -62,10 +62,10 @@ const VideoGrid = ({ participants }) => {
     selfies.map((selfie, i) => {
       return (
         <div
-        key={i}
+        key={`selfies-${i}`}
         style={{backgroundSize: 'cover'}}>
           <img
-          key={i}
+          key={`selfie-img-${i}`}
           alt='Selfie'
           src={`https://stand.qualabs.dev/${selfie}`}
           className='video-tile'
@@ -96,10 +96,10 @@ const VideoGrid = ({ participants }) => {
         justifyContent: 'center',
         width: tileWidth
       }}>
-        <div style={{fontSize: '6rem'}}>
+        <div style={{fontSize: 'calc(1.5em + 2vw)'}}>
           {currentTotp}
         </div>
-        <div style={{fontSize: '1.8rem'}}>
+        <div style={{fontSize: 'calc(.5em + 2vw)'}}>
           {counter} segundos
         </div>
       </div>
@@ -108,8 +108,8 @@ const VideoGrid = ({ participants }) => {
 
   return (
     <div ref={containerRef} className="video-grid-container">
-      {renderVideoTiles()}
       {renderSelfiesTiles()}
+      {renderVideoTiles()}
       {renderTotpTile()}
     </div>
   )
