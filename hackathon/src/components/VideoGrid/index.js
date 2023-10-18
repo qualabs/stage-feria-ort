@@ -66,6 +66,7 @@ const VideoGrid = ({ participants }) => {
         style={{backgroundSize: 'cover'}}>
           <img
           key={i}
+          alt='Selfie'
           src={`https://stand.qualabs.dev/${selfie}`}
           className='video-tile'
           style={{
