@@ -37,6 +37,7 @@ const VideoGrid = ({ participants }) => {
 
   useEffect(() => {
     const getSelfies = async () => {
+      console.log("Fetching selfies...")
       const response = await fetch(`${AWS_API_SELFIES}/getselfies`, {
         method: 'GET',
         headers: {
@@ -48,6 +49,10 @@ const VideoGrid = ({ participants }) => {
     }
 
     getSelfies().catch(console.error);
+
+    const interval = setInterval(getSelfies, 10000);
+
+    return () => clearInterval(interval);
   }, [])
 
   const renderVideoTiles = () => {
