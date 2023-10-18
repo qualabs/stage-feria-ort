@@ -76,6 +76,7 @@ const VideoGrid = ({ participants }) => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
+            alignSelf: 'center',
             width: tileWidth
           }}/>
         </div>
