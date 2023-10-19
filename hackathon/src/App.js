@@ -1,7 +1,6 @@
 import { JanusPluginHandle, JanusSession } from 'minijanus';
 import React, { useEffect, useRef, useState } from 'react';
 import './App.scss';
-import MuteButton from './components/MuteButton';
 import VideoGrid from './components/VideoGrid';
 
 const ROOM_ID = 1234
@@ -160,7 +159,6 @@ function App() {
 
   return (
     <div className='App'>
-      <MuteButton/>
       <div className='content'>
         <VideoGrid participants={participants} />
       </div>
